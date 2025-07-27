@@ -48,3 +48,7 @@ CREATE TABLE IF NOT EXISTS products (
     image_url VARCHAR(255),
     is_available BOOLEAN DEFAULT TRUE
 );
+
+
+ALTER TABLE services ADD COLUMN image VARCHAR(255) AFTER price;
+
