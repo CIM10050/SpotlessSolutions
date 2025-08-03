@@ -4,7 +4,7 @@ session_start();
 
 // If user is not logged in, redirect to login page
 if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {
-    header("Location: /login.php");
+    header("Location: /spotlesssolutions/index.php");
     exit();
 }
 

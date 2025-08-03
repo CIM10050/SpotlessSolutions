@@ -52,3 +52,17 @@ CREATE TABLE IF NOT EXISTS products (
 
 ALTER TABLE services ADD COLUMN image VARCHAR(255) AFTER price;
 
+ALTER TABLE bookings ADD COLUMN address TEXT NULL AFTER service_type;
+
+CREATE TABLE IF NOT EXISTS shop_settings (
+    setting_key VARCHAR(50) PRIMARY KEY,
+    setting_value VARCHAR(255)
+);
+
+INSERT INTO shop_settings (setting_key, setting_value) VALUES
+('open_time', '10:00'),
+('close_time', '18:00'),
+('holidays', '2025-08-15,2025-08-26');
+
+
+
