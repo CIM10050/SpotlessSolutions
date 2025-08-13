@@ -1,6 +1,9 @@
 <?php
 // includes/auth_check.php
-session_start();
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
+
 
 // If user is not logged in, redirect to login page
 if (!isset($_SESSION['user_id']) || empty($_SESSION['user_id'])) {

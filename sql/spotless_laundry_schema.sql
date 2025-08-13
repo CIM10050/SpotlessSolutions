@@ -66,3 +66,97 @@ INSERT INTO shop_settings (setting_key, setting_value) VALUES
 
 
 
+-- Orders master table
+-- Orders
+CREATE TABLE IF NOT EXISTS orders (
+  order_id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  delivery_type ENUM('pickup','dropoff','walkin') NOT NULL,
+  address_line VARCHAR(255),
+  suburb VARCHAR(100),
+  state VARCHAR(50),
+  postcode VARCHAR(10),
+  total_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
+  status ENUM('pending','confirmed','completed','cancelled') DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+);
+
+-- Order Items
+CREATE TABLE IF NOT EXISTS order_items (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  order_id INT NOT NULL,
+  item_type ENUM('service','product') NOT NULL,
+  item_id INT NOT NULL,
+  item_name VARCHAR(150) NOT NULL,
+  unit_price DECIMAL(10,2) NOT NULL,
+  quantity INT NOT NULL DEFAULT 1,
+  line_total DECIMAL(10,2) NOT NULL,
+  FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE
+);
+
+
+USE spotless_laundry;
+
+-- ORDERS (header)
+CREATE TABLE IF NOT EXISTS orders (
+  order_id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  delivery_type ENUM('walkin','pickup','dropoff') NOT NULL DEFAULT 'walkin',
+  address_line1 VARCHAR(150) NULL,
+  suburb VARCHAR(100) NULL,
+  state VARCHAR(50) NULL,
+  postcode VARCHAR(12) NULL,
+  notes TEXT NULL,
+  total_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  status ENUM('pending','confirmed','completed','cancelled') NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+-- ORDER ITEMS (lines)
+CREATE TABLE IF NOT EXISTS order_items (
+  item_id INT AUTO_INCREMENT PRIMARY KEY,
+  order_id INT NOT NULL,
+  item_type ENUM('service','product') NOT NULL,
+  ref_id INT NOT NULL,                 -- service_id or product_id
+  name VARCHAR(150) NOT NULL,
+  qty INT NOT NULL DEFAULT 1,
+  unit_price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  line_total DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
+  INDEX (order_id),
+  INDEX (item_type, ref_id)
+) ENGINE=InnoDB;
+
+
+USE spotless_laundry;
+
+CREATE TABLE IF NOT EXISTS orders (
+  order_id INT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  delivery_type ENUM('walkin','pickup','dropoff') NOT NULL DEFAULT 'walkin',
+  address_line1 VARCHAR(150),
+  suburb VARCHAR(100),
+  state VARCHAR(50),
+  postcode VARCHAR(12),
+  notes TEXT,
+  total_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  status ENUM('pending','confirmed','completed','cancelled') NOT NULL DEFAULT 'pending',
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE IF NOT EXISTS order_items (
+  item_id INT AUTO_INCREMENT PRIMARY KEY,
+  order_id INT NOT NULL,
+  item_type ENUM('service','product') NOT NULL,
+  ref_id INT NOT NULL,
+  name VARCHAR(150) NOT NULL,
+  qty INT NOT NULL DEFAULT 1,
+  unit_price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  line_total DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+  FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
+  INDEX (order_id),
+  INDEX (item_type, ref_id)
+) ENGINE=InnoDB;
