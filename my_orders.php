@@ -57,9 +57,9 @@ include('includes/header.php');
             <?php while ($o = mysqli_fetch_assoc($ordersRes)): ?>
                 <?php
                 // Fetch items
-                $sqlItems = "SELECT item_id, item_type, item_ref_id, name, unit_price, qty, line_total
+                $sqlItems = "SELECT id, item_type, ref_id, name, unit_price, qty, line_total
                              FROM order_items WHERE order_id = ?
-                             ORDER BY item_id ASC";
+                             ORDER BY id ASC";
                 $stmtI = mysqli_prepare($conn, $sqlItems);
                 mysqli_stmt_bind_param($stmtI, "i", $o['order_id']);
                 mysqli_stmt_execute($stmtI);

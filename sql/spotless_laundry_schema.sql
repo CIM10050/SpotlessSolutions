@@ -1,162 +1,153 @@
+-- REBUILD spotless_laundry FROM SCRATCH
+-- =====================================
 
--- Create database
-CREATE DATABASE IF NOT EXISTS spotless_laundry;
-USE spotless_laundry;
+-- Drop and recreate the database
+DROP DATABASE IF EXISTS `spotless_laundry`;
+CREATE DATABASE `spotless_laundry`
+  CHARACTER SET utf8mb4
+  COLLATE utf8mb4_general_ci;
+USE `spotless_laundry`;
 
--- Users table
-CREATE TABLE IF NOT EXISTS users (
-    user_id INT AUTO_INCREMENT PRIMARY KEY,
-    full_name VARCHAR(100) NOT NULL,
-    email VARCHAR(100) UNIQUE NOT NULL,
-    phone VARCHAR(20),
-    password_hash VARCHAR(255) NOT NULL,
-    address TEXT,
-    user_role ENUM('customer', 'admin') DEFAULT 'customer',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-);
+-- If you're running this inside an existing DB session later, also clear tables:
+SET FOREIGN_KEY_CHECKS = 0;
+DROP TABLE IF EXISTS order_items, orders, bookings, products, services, shop_settings, users;
+SET FOREIGN_KEY_CHECKS = 1;
 
--- Bookings tablej
-CREATE TABLE IF NOT EXISTS bookings (
-    booking_id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    service_type ENUM('pickup', 'dropoff', 'walkin') NOT NULL,
-    scheduled_date DATE NOT NULL,
-    scheduled_time TIME NOT NULL,
-    status ENUM('pending', 'confirmed', 'completed', 'cancelled') DEFAULT 'pending',
-    special_instructions TEXT,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-);
+-- ----------------------------
+-- users
+-- ----------------------------
+CREATE TABLE `users` (
+  `user_id` int(11) NOT NULL AUTO_INCREMENT,
+  `full_name` varchar(100) NOT NULL,
+  `email` varchar(100) NOT NULL,
+  `phone` varchar(20) DEFAULT NULL,
+  `password_hash` varchar(255) NOT NULL,
+  `address` text DEFAULT NULL,
+  `user_role` enum('customer','admin') DEFAULT 'customer',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`user_id`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Services table
-CREATE TABLE IF NOT EXISTS services (
-    service_id INT AUTO_INCREMENT PRIMARY KEY,
-    service_name VARCHAR(100) NOT NULL,
-    description TEXT,
-    price DECIMAL(10,2) NOT NULL,
-    duration_minutes INT,
-    is_active BOOLEAN DEFAULT TRUE
-);
+-- admin user (same as your dump)
+INSERT INTO `users`
+(`user_id`, `full_name`, `email`, `phone`, `password_hash`, `address`, `user_role`, `created_at`)
+VALUES
+(4, 'Akram Ali', 'admin@spotless.com', '', '$2y$10$Q1D/50JyXdCr7.karlsjAeHBq5rPaQKP5eGOyhErbBkjXUA25ncuK', NULL, 'admin', '2025-07-27 06:23:58');
 
--- Products table
-CREATE TABLE IF NOT EXISTS products (
-    product_id INT AUTO_INCREMENT PRIMARY KEY,
-    product_name VARCHAR(100) NOT NULL,
-    description TEXT,
-    price DECIMAL(10,2) NOT NULL,
-    stock_quantity INT DEFAULT 0,
-    image_url VARCHAR(255),
-    is_available BOOLEAN DEFAULT TRUE
-);
+-- ----------------------------
+-- products
+-- ----------------------------
+CREATE TABLE `products` (
+  `product_id` int(11) NOT NULL AUTO_INCREMENT,
+  `product_name` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `price` decimal(10,2) NOT NULL,
+  `stock_quantity` int(11) DEFAULT 0,
+  `image_url` varchar(255) DEFAULT NULL,
+  `is_available` tinyint(1) DEFAULT 1,
+  PRIMARY KEY (`product_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+INSERT INTO `products`
+(`product_id`, `product_name`, `description`, `price`, `stock_quantity`, `image_url`, `is_available`)
+VALUES
+(1, 'test product', 'Testing the product', 25.00, 23, '1753603942_illustration of best and worst laundry detergents.jpg', 1);
 
-ALTER TABLE services ADD COLUMN image VARCHAR(255) AFTER price;
+-- ----------------------------
+-- services
+-- ----------------------------
+CREATE TABLE `services` (
+  `service_id` int(11) NOT NULL AUTO_INCREMENT,
+  `service_name` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `price` decimal(10,2) NOT NULL,
+  `image` varchar(255) DEFAULT NULL,
+  `duration_minutes` int(11) DEFAULT NULL,
+  `is_active` tinyint(1) DEFAULT 1,
+  PRIMARY KEY (`service_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-ALTER TABLE bookings ADD COLUMN address TEXT NULL AFTER service_type;
+INSERT INTO `services`
+(`service_id`, `service_name`, `description`, `price`, `image`, `duration_minutes`, `is_active`)
+VALUES
+(1, 'Test Service 1', 'Test the servie 12', 40.02, '1753599446_istockphoto-1329135522-612x612.jpg', NULL, 1);
 
-CREATE TABLE IF NOT EXISTS shop_settings (
-    setting_key VARCHAR(50) PRIMARY KEY,
-    setting_value VARCHAR(255)
-);
+-- ----------------------------
+-- shop_settings
+-- ----------------------------
+CREATE TABLE `shop_settings` (
+  `setting_key` varchar(50) NOT NULL,
+  `setting_value` varchar(255) DEFAULT NULL,
+  PRIMARY KEY (`setting_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-INSERT INTO shop_settings (setting_key, setting_value) VALUES
-('open_time', '10:00'),
-('close_time', '18:00'),
-('holidays', '2025-08-15,2025-08-26');
+-- ----------------------------
+-- orders
+-- ----------------------------
+CREATE TABLE `orders` (
+  `order_id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `delivery_option` enum('pickup','dropoff','walkin') NOT NULL,
+  `address_line1` varchar(150) DEFAULT NULL,
+  `suburb` varchar(80) DEFAULT NULL,
+  `state` varchar(10) DEFAULT NULL,
+  `postcode` varchar(10) DEFAULT NULL,
+  `total_amount` decimal(10,2) NOT NULL,
+  `status` enum('pending','confirmed','completed','cancelled') DEFAULT 'pending',
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `delivery_type` enum('walkin','pickup','dropoff') NOT NULL DEFAULT 'walkin',
+  `notes` text DEFAULT NULL,
+  PRIMARY KEY (`order_id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `orders_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- ----------------------------
+-- order_items
+-- ----------------------------
+CREATE TABLE `order_items` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `order_id` int(11) NOT NULL,
+  `item_type` enum('service','product') NOT NULL,
+  `ref_id` int(11) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `qty` int(11) NOT NULL,
+  `unit_price` decimal(10,2) NOT NULL,
+  `line_total` decimal(10,2) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `order_id` (`order_id`),
+  CONSTRAINT `order_items_ibfk_1` FOREIGN KEY (`order_id`) REFERENCES `orders` (`order_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- ----------------------------
+-- bookings (optional; unchanged)
+-- ----------------------------
+CREATE TABLE `bookings` (
+  `booking_id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `service_type` enum('pickup','dropoff','walkin') NOT NULL,
+  `address` text DEFAULT NULL,
+  `scheduled_date` date NOT NULL,
+  `scheduled_time` time NOT NULL,
+  `status` enum('pending','confirmed','completed','cancelled') DEFAULT 'pending',
+  `special_instructions` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`booking_id`),
+  KEY `user_id` (`user_id`),
+  CONSTRAINT `bookings_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`user_id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
--- Orders master table
--- Orders
-CREATE TABLE IF NOT EXISTS orders (
-  order_id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  delivery_type ENUM('pickup','dropoff','walkin') NOT NULL,
-  address_line VARCHAR(255),
-  suburb VARCHAR(100),
-  state VARCHAR(50),
-  postcode VARCHAR(10),
-  total_amount DECIMAL(10,2) NOT NULL DEFAULT 0,
-  status ENUM('pending','confirmed','completed','cancelled') DEFAULT 'pending',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-);
+-- Recreate the same AUTO_INCREMENT counters you had
+ALTER TABLE `orders`       AUTO_INCREMENT = 4;
+ALTER TABLE `order_items`  AUTO_INCREMENT = 3;
+ALTER TABLE `products`     AUTO_INCREMENT = 2;
+ALTER TABLE `services`     AUTO_INCREMENT = 2;
+ALTER TABLE `users`        AUTO_INCREMENT = 5;
 
--- Order Items
-CREATE TABLE IF NOT EXISTS order_items (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  order_id INT NOT NULL,
-  item_type ENUM('service','product') NOT NULL,
-  item_id INT NOT NULL,
-  item_name VARCHAR(150) NOT NULL,
-  unit_price DECIMAL(10,2) NOT NULL,
-  quantity INT NOT NULL DEFAULT 1,
-  line_total DECIMAL(10,2) NOT NULL,
-  FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE
-);
-
-
-USE spotless_laundry;
-
--- ORDERS (header)
-CREATE TABLE IF NOT EXISTS orders (
-  order_id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  delivery_type ENUM('walkin','pickup','dropoff') NOT NULL DEFAULT 'walkin',
-  address_line1 VARCHAR(150) NULL,
-  suburb VARCHAR(100) NULL,
-  state VARCHAR(50) NULL,
-  postcode VARCHAR(12) NULL,
-  notes TEXT NULL,
-  total_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  status ENUM('pending','confirmed','completed','cancelled') NOT NULL DEFAULT 'pending',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-) ENGINE=InnoDB;
-
--- ORDER ITEMS (lines)
-CREATE TABLE IF NOT EXISTS order_items (
-  item_id INT AUTO_INCREMENT PRIMARY KEY,
-  order_id INT NOT NULL,
-  item_type ENUM('service','product') NOT NULL,
-  ref_id INT NOT NULL,                 -- service_id or product_id
-  name VARCHAR(150) NOT NULL,
-  qty INT NOT NULL DEFAULT 1,
-  unit_price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  line_total DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
-  INDEX (order_id),
-  INDEX (item_type, ref_id)
-) ENGINE=InnoDB;
-
-
-USE spotless_laundry;
-
-CREATE TABLE IF NOT EXISTS orders (
-  order_id INT AUTO_INCREMENT PRIMARY KEY,
-  user_id INT NOT NULL,
-  delivery_type ENUM('walkin','pickup','dropoff') NOT NULL DEFAULT 'walkin',
-  address_line1 VARCHAR(150),
-  suburb VARCHAR(100),
-  state VARCHAR(50),
-  postcode VARCHAR(12),
-  notes TEXT,
-  total_amount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  status ENUM('pending','confirmed','completed','cancelled') NOT NULL DEFAULT 'pending',
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE
-) ENGINE=InnoDB;
-
-CREATE TABLE IF NOT EXISTS order_items (
-  item_id INT AUTO_INCREMENT PRIMARY KEY,
-  order_id INT NOT NULL,
-  item_type ENUM('service','product') NOT NULL,
-  ref_id INT NOT NULL,
-  name VARCHAR(150) NOT NULL,
-  qty INT NOT NULL DEFAULT 1,
-  unit_price DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  line_total DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-  FOREIGN KEY (order_id) REFERENCES orders(order_id) ON DELETE CASCADE,
-  INDEX (order_id),
-  INDEX (item_type, ref_id)
-) ENGINE=InnoDB;
+-- Helpful indexes (optional but recommended)
+CREATE INDEX idx_order_items_order_id ON order_items(order_id);
+CREATE INDEX idx_order_items_ord_ref_type ON order_items(order_id, ref_id, item_type);
+CREATE INDEX idx_orders_user_status ON orders(user_id, status);
+CREATE INDEX idx_orders_created ON orders(created_at);
