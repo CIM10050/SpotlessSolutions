@@ -2,7 +2,7 @@
 
 <!-- Hero Section -->
 <section class="relative bg-blue-900 text-white py-20 overflow-hidden">
-  <div class="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1609397832708-e5de9ef5c975?auto=format&fit=crop&w=1400&q=80')] bg-cover bg-center opacity-30"></div>
+  <div class="absolute inset-0 bg-[url('https://unsplash.com/photos/white-front-load-washing-machines-f4jsI88K7ds')] bg-cover bg-center opacity-30"></div>
   <div class="relative z-10 text-center max-w-4xl mx-auto px-6">
     <h1 class="text-4xl md:text-5xl font-extrabold mb-4" data-aos="fade-up">About Spotless Solutions</h1>
     <p class="text-lg text-blue-100" data-aos="fade-up" data-aos-delay="100">Revolutionizing laundry in Australia with modern, customer-first digital services</p>
